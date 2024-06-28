@@ -1,0 +1,67 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.App {
+  display: flex;
+  margin-top: 15px;
+  column-gap: 15px;
+}
+
+/* Map */
+.Diagram {
+  border: 1px solid black;
+  border-radius: 10px;
+  margin-left: 5px;
+}
+
+/* Info */
+.InfoWrapper {
+  width: 550px;
+}
+
+.inputButtonWrapper {
+  background: lightseagreen;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  border-radius: 10px;
+  padding: 6px 0;
+
+}
+
+.inputButton {
+  outline: none;
+  border: none;
+  border-radius: 10px;
+  padding: 3px 6px;
+}
+
+.disable {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.infoItems {
+  background: lightseagreen;
+  padding: 10px;
+  border-radius: 10px;
+  color: white;
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+.infoItem {
+  border-bottom: 2px solid white;
+  padding: 10px 0;
+}
+
+.consumer {
+  color: blue;
+}
+
+.generator {
+  color: red;
+}
