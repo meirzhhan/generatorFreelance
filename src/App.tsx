@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import './App.css';
-import Diagram from './Logic/Diagram';
+import Diagram from './Diagram/Diagram';
 import Info from './Info/Info';
-import { xd } from './Logic/connectionFunc';
+import { connectionFunc } from './connection/connectionFunc';
 
 interface Info {
   consumer: number; // Потребитель
   generator: number; // Генератор
   loss: number; // Потери
-  road: string; //
-  requested: string;
+  road: string; // путь до потребителя, Пример: [3, 5, 7]
+  requested: string; // запрошенное количество
 }
 
 export type InfoDataType = Info[];
 
 function App() {
-  const [data, setData] = useState<InfoDataType>([]); // Данные
+  const [data, setData] = useState<InfoDataType>([]); // Возвращаемые Данные
   const [value, setValue] = useState(''); // Значение инпута
   const [isInputVisible, setIsInputVisible] = useState(false); // Видимость инпута
   const [selectedDot, setSelectedDot] = useState(0); // Выбранный потребитель
@@ -34,7 +34,7 @@ function App() {
   // Функция для подключения
   const connect = () => {
     if (selectedDot) {
-      const { generator, loss, road } = xd(selectedDot);
+      const { generator, loss, road } = connectionFunc(selectedDot);
       const updatedInfo = [
         ...data,
         {

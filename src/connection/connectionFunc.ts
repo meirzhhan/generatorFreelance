@@ -399,14 +399,14 @@ interface Previous {
   [key: number]: number | null;
 }
 
-// Функция для создания графа из списка рёбер
+// Функция для создания графа из списка
 function createGraph(edges: [number, number, number][]): Graph {
   const graph: Graph = {};
   edges.forEach(([from, to, weight]) => {
     if (!graph[from]) graph[from] = { id: from, edges: [] };
     if (!graph[to]) graph[to] = { id: to, edges: [] };
     graph[from].edges.push({ to, weight });
-    graph[to].edges.push({ to: from, weight }); // Добавляем обратное ребро
+    graph[to].edges.push({ to: from, weight }); // обратный путь
   });
   return graph;
 }
@@ -428,7 +428,7 @@ function dijkstra(
   distances[startNode] = 0;
 
   while (nodes.size > 0) {
-    // Найти узел с минимальной дистанцией
+    // Найти путь с минимальной потерей
     let closestNode = Array.from(nodes).reduce((minNode, node) =>
       distances[node] < distances[minNode] ? node : minNode,
     );
@@ -491,7 +491,7 @@ function findOptimalPathForConsumer(
   return { generator: optimalGenerator, path: bestPath, loss: minLoss };
 }
 
-// Пример использования
+// from, to, потери
 export const arrows: [number, number, number][] = [
   [1, 2, 0.109], //
   [1, 15, 0.54], //
@@ -574,28 +574,21 @@ export const arrows: [number, number, number][] = [
   [55, 58, 0.4], //
 ];
 
-export const xd = (start: number) => {
-  const generators = [1, 2, 3, 6, 8, 9, 16];
-  const consumer = start;
+export const connectionFunc = (start: number) => {
+  const generators = [1, 2, 3, 6, 8, 9, 16]; // массив генераторов
+  const consumer = start; // потребитель, который запрашивает
 
   const graph = createGraph(arrows);
   const result = findOptimalPathForConsumer(graph, generators, consumer);
 
-  // console.log(
-  //   `Минимальная потеря от генератора ${result.generator} до потребителя ${consumer}: ${result.loss}`,
-  // );
-  // console.log(`Путь: ${result.path.join(' -> ')}`);
-
-  console.log(result.generator);
-
   return {
-    road: result.path,
-    loss: result.loss,
-    generator: result.generator,
+    road: result.path, // путь до потребителя, Пример: [3, 5, 7]
+    loss: result.loss, // общие потери до потребителя
+    generator: result.generator, // Генератор, который отдал
   };
 };
 
-// TODO: Учитывает наилучший маршрут по направлению
+// TODO: Учитывает наилучший маршрут по направлению (не идёт против движения)
 
 // interface Edge {
 //   to: number;

@@ -1,4 +1,4 @@
-import { arrows } from './connectionFunc';
+import { arrows } from '../connection/connectionFunc';
 import Dots, { scaledDots } from '../Dots/Dots';
 import Arrows from '../Arrows/Arrows';
 
