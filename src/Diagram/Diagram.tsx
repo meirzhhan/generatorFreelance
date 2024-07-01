@@ -32,8 +32,8 @@ const Diagram = ({ onClickDot }: DiagramProps) => {
       {arrows.map((arrow, index) => (
         <Arrows arrow={arrow} key={index} />
       ))}
-      {scaledDots.map((dot) => (
-        <Dots onClickDot={onClickDot} dot={dot} />
+      {scaledDots.map((dot, index) => (
+        <Dots key={index} onClickDot={onClickDot} dot={dot} />
       ))}
     </svg>
   );

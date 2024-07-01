@@ -80,8 +80,8 @@ const scaleCoordinates = (
 ): Dot[] => {
   const minX = Math.min(...dots.map((dot) => dot.x)) - 15;
   const maxX = Math.max(...dots.map((dot) => dot.x)) + 35;
-  const minY = Math.min(...dots.map((dot) => dot.y)) - 15;
-  const maxY = Math.max(...dots.map((dot) => dot.y)) + 15;
+  const minY = Math.min(...dots.map((dot) => dot.y)) - 30;
+  const maxY = Math.max(...dots.map((dot) => dot.y)) + 30;
 
   return dots.map((dot) => ({
     ...dot,

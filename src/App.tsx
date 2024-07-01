@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './App.css';
 import Diagram from './Diagram/Diagram';
 import Info from './Info/Info';
-import { connectionFunc } from './connection/connectionFunc';
+import { connectionFunc, generators } from './connection/connectionFunc';
 
 interface Info {
   consumer: number; // Потребитель
@@ -27,26 +27,27 @@ function App() {
 
   // функция для открытия инпута и установления выбранного потребителя
   const onClickDot = (id: number) => {
-    setSelectedDot(id);
-    setIsInputVisible(true);
+    if (!generators.includes(id)) {
+      setSelectedDot(id);
+      setIsInputVisible(true);
+    }
   };
 
   // Функция для подключения
   const connect = () => {
-    if (selectedDot) {
-      const { generator, loss, road } = connectionFunc(selectedDot);
-      const updatedInfo = [
-        ...data,
-        {
-          consumer: selectedDot,
-          generator,
-          loss,
-          road: road.join(' -> '),
-          requested: value,
-        },
-      ];
-      setData(updatedInfo);
+    if (selectedDot && value) {
+      const requestedEnergy = parseFloat(value);
+      let connectionResult = connectionFunc(selectedDot, requestedEnergy);
 
+      // Проверка если генератор не найден
+      // if (connectionResult.generator === -1) {
+      //   alert('Не хватает энергии для удовлетворения запроса.');
+      //   setIsInputVisible(false);
+      //   return;
+      // }
+
+      const { data } = connectionResult;
+      data && setData(data);
       setIsInputVisible(false);
     }
   };

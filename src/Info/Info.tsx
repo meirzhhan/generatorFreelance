@@ -31,13 +31,13 @@ const Info = (props: InfoProps) => {
 
       <div className="infoItems" style={{ marginTop: 15 }}>
         {infoData.map((item, index) => (
-          <div className="infoItem">
-            <p key={index}>
+          <div key={index} className="infoItem">
+            <p>
               Получатель: <span className="consumer">{item.consumer}</span> |{' '}
               Генератор: <span className="generator">{item.generator}</span> |
               Потери: {item.loss.toFixed(2)}
             </p>
-            <p key={index}>Путь от генератора: {item.road}</p>
+            <p>Путь от генератора: {item.road}</p>
             <p>
               запрошенное количество: {item.requested} | Итого:{' '}
               {Number(item.requested) + item.loss}
