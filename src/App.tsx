@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import Diagram from './Diagram/Diagram';
 import Info from './Info/Info';
 import { connectionFunc, generators } from './connection/connectionFunc';
+import { dots } from './Dots/Dots';
 
 interface Info {
   consumer: number; // Потребитель
@@ -15,10 +16,24 @@ interface Info {
 export type InfoDataType = Info[];
 
 function App() {
-  const [data, setData] = useState<InfoDataType>([]); // Возвращаемые Данные
+  const [connectionData, setConnectionData] = useState<InfoDataType>([]); // Возвращаемые Данные
   const [value, setValue] = useState(''); // Значение инпута
   const [isInputVisible, setIsInputVisible] = useState(false); // Видимость инпута
   const [selectedDot, setSelectedDot] = useState(0); // Выбранный потребитель
+
+  const initConnections = useCallback((id: number, consumption: number) => {
+    const { data } = connectionFunc(id, consumption);
+    data && setConnectionData(data);
+    console.log(connectionData);
+  }, []);
+
+  useEffect(() => {
+    dots.map((dot) => {
+      if (dot.consumption && dot.consumption > 0) {
+        initConnections(dot.id, dot.consumption);
+      }
+    });
+  }, []);
 
   // Функция для изменения инпута
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,17 +52,9 @@ function App() {
   const connect = () => {
     if (selectedDot && value) {
       const requestedEnergy = parseFloat(value);
-      let connectionResult = connectionFunc(selectedDot, requestedEnergy);
+      const { data } = connectionFunc(selectedDot, requestedEnergy);
 
-      // Проверка если генератор не найден
-      // if (connectionResult.generator === -1) {
-      //   alert('Не хватает энергии для удовлетворения запроса.');
-      //   setIsInputVisible(false);
-      //   return;
-      // }
-
-      const { data } = connectionResult;
-      data && setData(data);
+      data && setConnectionData(data);
       setIsInputVisible(false);
     }
   };
@@ -56,7 +63,7 @@ function App() {
     <div className="App">
       <Diagram onClickDot={onClickDot} />
       <Info
-        infoData={data}
+        infoData={connectionData}
         onClickButton={connect}
         isInputVisible={isInputVisible}
         onChange={onChangeInput}

@@ -39,8 +39,8 @@ const Info = (props: InfoProps) => {
             </p>
             <p>Путь от генератора: {item.road}</p>
             <p>
-              запрошенное количество: {item.requested} | Итого:{' '}
-              {Number(item.requested) + item.loss}
+              Запрошено: {item.requested} | Получено:{' '}
+              {(Number(item.requested) - item.loss).toFixed(3)}
             </p>
           </div>
         ))}
