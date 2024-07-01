@@ -226,7 +226,6 @@ export const generatorEnergy: { [key: number]: number } = {
   6: 67.5,
   8: 456.68,
   9: 87.52,
-  //
   12: 352.77,
   16: 118.71,
 };
@@ -245,10 +244,10 @@ export const connectionFunc = (start: number, requiredEnergy: number) => {
   console.log(`До: ${totalAvailableEnergy}`);
   const consumer = start; // consumer requesting energy
 
-  if (requiredEnergy > totalAvailableEnergy) {
-    alert('Not enough total energy to satisfy the request.');
-    return { data };
-  }
+  // if (requiredEnergy > totalAvailableEnergy) {
+  //   alert('Not enough total energy to satisfy the request.');
+  //   return {};
+  // }
 
   let remainingEnergy = requiredEnergy;
   const paths: InfoDataType = [];
@@ -264,7 +263,7 @@ export const connectionFunc = (start: number, requiredEnergy: number) => {
 
     if (!result) {
       console.log('No valid path found for the remaining energy.');
-      break; // Exit loop if no valid path is found
+      return {}; // Exit loop if no valid path is found
     }
 
     const { generator, path, loss, availableEnergy } = result;
@@ -298,5 +297,7 @@ export const connectionFunc = (start: number, requiredEnergy: number) => {
 
   return {
     data,
+    generatorEnergy,
+    totalAvailableEnergy,
   };
 };

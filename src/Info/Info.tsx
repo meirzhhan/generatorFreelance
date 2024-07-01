@@ -7,26 +7,44 @@ interface InfoProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClickButton: () => void;
+  selectedConsumer?: number;
 }
 
 const Info = (props: InfoProps) => {
-  const { isInputVisible, value, onChange, onClickButton, infoData } = props;
+  const {
+    isInputVisible,
+    value,
+    onChange,
+    onClickButton,
+    infoData,
+    selectedConsumer,
+  } = props;
+
   return (
     <div className="InfoWrapper">
-      <div className="inputButtonWrapper">
-        <input
-          className={isInputVisible ? 'inputButton' : 'inputButton disable'}
-          type="number"
-          value={value}
-          onChange={onChange}
-          placeholder="Введите количество"
-        />
-        <button
-          className={isInputVisible ? 'inputButton' : 'inputButton disable'}
-          onClick={onClickButton}
-        >
-          Запросить
-        </button>
+      <div className="header">
+        <p>
+          {selectedConsumer
+            ? `Потребитель: ${selectedConsumer}`
+            : 'Выберите потребителя'}
+        </p>
+        <div className="inputButtonWrapper">
+          <input
+            style={{ width: 135 }}
+            className={isInputVisible ? 'inputButton' : 'inputButton disable'}
+            type="number"
+            value={value}
+            onChange={onChange}
+            placeholder="Введите количество"
+          />
+          <button
+            style={{ width: 70 }}
+            className={isInputVisible ? 'inputButton' : 'inputButton disable'}
+            onClick={onClickButton}
+          >
+            Получить
+          </button>
+        </div>
       </div>
 
       <div className="infoItems" style={{ marginTop: 15 }}>
@@ -34,13 +52,17 @@ const Info = (props: InfoProps) => {
           <div key={index} className="infoItem">
             <p>
               Получатель: <span className="consumer">{item.consumer}</span> |{' '}
-              Генератор: <span className="generator">{item.generator}</span> |
-              Потери: {item.loss.toFixed(2)}
+              Генератор: <span className="generator">{item.generator}</span>
             </p>
-            <p>Путь от генератора: {item.road}</p>
             <p>
-              Запрошено: {item.requested} | Получено:{' '}
-              {(Number(item.requested) - item.loss).toFixed(3)}
+              Запрошено: {Number(item.requested).toFixed(2)} | Потери:{' '}
+              {item.loss.toFixed(2)}
+            </p>
+            <p>
+              Путь:{' '}
+              {item.road.length == 1
+                ? `${item.road} -> ${item.road}`
+                : item.road}
             </p>
           </div>
         ))}

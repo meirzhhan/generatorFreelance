@@ -2,8 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import Diagram from './Diagram/Diagram';
 import Info from './Info/Info';
-import { connectionFunc, generators } from './connection/connectionFunc';
+import {
+  connectionFunc,
+  generatorEnergy,
+  generators,
+} from './connection/connectionFunc';
 import { dots } from './Dots/Dots';
+import GeneratorsInfo from './GeneratorsInfo/Generators';
 
 interface Info {
   consumer: number; // Потребитель
@@ -20,11 +25,21 @@ function App() {
   const [value, setValue] = useState(''); // Значение инпута
   const [isInputVisible, setIsInputVisible] = useState(false); // Видимость инпута
   const [selectedDot, setSelectedDot] = useState(0); // Выбранный потребитель
+  const [totalAvailableEnergy, setTotalAvailableEnergy] = useState<number>(0);
+  const [generatorsEnergy, setGeneratorsEnergy] = useState<{
+    [key: number]: number;
+  }>(generatorEnergy);
 
   const initConnections = useCallback((id: number, consumption: number) => {
-    const { data } = connectionFunc(id, consumption);
-    data && setConnectionData(data);
-    console.log(connectionData);
+    const { data, totalAvailableEnergy, generatorEnergy } = connectionFunc(
+      id,
+      consumption,
+    );
+    if (data) {
+      setConnectionData(data);
+      setTotalAvailableEnergy(totalAvailableEnergy);
+      setGeneratorsEnergy(generatorEnergy);
+    }
   }, []);
 
   useEffect(() => {
@@ -52,15 +67,27 @@ function App() {
   const connect = () => {
     if (selectedDot && value) {
       const requestedEnergy = parseFloat(value);
-      const { data } = connectionFunc(selectedDot, requestedEnergy);
+      const { data, totalAvailableEnergy, generatorEnergy } = connectionFunc(
+        selectedDot,
+        requestedEnergy,
+      );
 
-      data && setConnectionData(data);
+      if (data) {
+        setConnectionData(data);
+        setTotalAvailableEnergy(totalAvailableEnergy);
+        setGeneratorsEnergy(generatorEnergy);
+      }
       setIsInputVisible(false);
     }
   };
+  console.log(connectionData);
 
   return (
     <div className="App">
+      <GeneratorsInfo
+        generatorsEnergy={generatorsEnergy}
+        totalEnergy={totalAvailableEnergy}
+      />
       <Diagram onClickDot={onClickDot} />
       <Info
         infoData={connectionData}
@@ -68,6 +95,7 @@ function App() {
         isInputVisible={isInputVisible}
         onChange={onChangeInput}
         value={value}
+        selectedConsumer={selectedDot}
       />
     </div>
   );

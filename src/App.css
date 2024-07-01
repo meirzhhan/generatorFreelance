@@ -11,8 +11,25 @@ input::-webkit-inner-spin-button {
 
 .App {
   display: flex;
+  justify-content: space-between;
   margin-top: 15px;
   column-gap: 15px;
+}
+
+/* generatorsInfo */
+.generatorsInfo {
+  width: 200px;
+  color: white;
+  background: lightseagreen;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.generatorsInfo span {
+  color: red;
 }
 
 /* Map */
@@ -24,24 +41,32 @@ input::-webkit-inner-spin-button {
 
 /* Info */
 .InfoWrapper {
-  width: 550px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: lightseagreen;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 10px;
+  padding: 12px 6px;
+  color: white;
+
 }
 
 .inputButtonWrapper {
-  background: lightseagreen;
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  border-radius: 10px;
-  padding: 6px 0;
-
+  gap: 10px;
 }
 
 .inputButton {
   outline: none;
   border: none;
   border-radius: 10px;
-  padding: 3px 6px;
+  padding: 3px;
 }
 
 .inputButton:last-child {
@@ -58,7 +83,7 @@ input::-webkit-inner-spin-button {
   padding: 10px;
   border-radius: 10px;
   color: white;
-  height: 700px;
+  height: 680px;
   overflow-y: auto;
 }
 
