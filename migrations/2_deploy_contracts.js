@@ -1,7 +1,7 @@
-/* global artifacts, web3 */
+/* global artifacts */
 
-const EnergyLossCalculator = artifacts.require("EnergyLossCalculator");
+const EnergyTransfer = artifacts.require("EnergyTransfer");
 
 module.exports = function (deployer) {
-  deployer.deploy(EnergyLossCalculator);
+  deployer.deploy(EnergyTransfer);
 };
