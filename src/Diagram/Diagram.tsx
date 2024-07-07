@@ -9,7 +9,7 @@ interface DiagramProps {
 const Diagram = ({ onClickDot }: DiagramProps) => {
   return (
     <svg
-      width="900"
+      width="850"
       height="750"
       // viewBox="0 0 650 750"
       preserveAspectRatio="xMidYMid meet"

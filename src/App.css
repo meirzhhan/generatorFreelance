@@ -12,6 +12,7 @@ input::-webkit-inner-spin-button {
 .App {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   margin-top: 15px;
   column-gap: 15px;
 }
@@ -98,4 +99,19 @@ input::-webkit-inner-spin-button {
 
 .generator {
   color: red;
+}
+
+/* TransactionsInfo */
+.TransactionWrapper {
+  margin-top: 15px;
+  padding: 12px;
+  background: lightseagreen;
+  width: 100%;
+  color: white;
+}
+
+.TransactionsInfo {
+  margin-top: 5px;
+  display: flex;
+  gap: 20px;
 }

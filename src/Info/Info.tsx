@@ -28,6 +28,7 @@ const Info = (props: InfoProps) => {
             ? `Потребитель: ${selectedConsumer}`
             : 'Выберите потребителя'}
         </p>
+
         <div className="inputButtonWrapper">
           <input
             style={{ width: 135 }}
@@ -46,7 +47,6 @@ const Info = (props: InfoProps) => {
           </button>
         </div>
       </div>
-
       <div className="infoItems" style={{ marginTop: 15 }}>
         {infoData.map((item, index) => (
           <div key={index} className="infoItem">

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 contract EnergyTransfer {
-    uint256 public constant PRICE_PER_KWH = 10; // Цена указана в центах, т.е. 10 центов = 0.10 долларов
+    uint256 public constant PRICE_PER_MWH = 23000; // Цена указана в центах, т.е. 10 центов = 0.10 долларов
 
     struct Transfer {
         address generator;
@@ -33,7 +33,7 @@ contract EnergyTransfer {
 
         uint256 energyLoss = (_energyGenerated * _lossCoefficient) / 100;
         uint256 energyReceived = _energyGenerated - energyLoss;
-        uint256 cost = (energyReceived * PRICE_PER_KWH);
+        uint256 cost = (energyReceived * PRICE_PER_MWH);
 
         Transfer memory newTransfer = Transfer({
             generator: _generator,

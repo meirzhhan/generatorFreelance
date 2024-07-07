@@ -27,9 +27,6 @@ const logEnergyTransfer = async (
   lossCoefficient,
 ) => {
   const contract = await getContract();
-  // Преобразование значений в целые числа
-  // const energyGeneratedInt = Math.round(energyGenerated * 1e6); // например, 1e6 для перевода в микроединицы
-  // const lossCoefficientInt = Math.round(lossCoefficient * 1e6);
 
   await contract.methods
     .logEnergyTransfer(generator, consumer, energyGenerated, lossCoefficient)
@@ -271,14 +268,13 @@ export const generatorEnergy: { [key: number]: number } = {
   8: 456.68,
   9: 87.52,
   12: 352.77,
-  16: 118.71,
+  16: 118000.71,
 };
 
 let totalAvailableEnergy = Object.values(generatorEnergy).reduce(
   (a, b) => a + b,
   0,
 );
-console.log(`gens: ${totalAvailableEnergy}`);
 
 const data: InfoDataType = [];
 
@@ -364,9 +360,10 @@ export const connectionFunc = async (start: number, requiredEnergy: number) => {
   };
 };
 
-export const getTransfersForGenerator = async (generatorId: number) => {
+export const getTransfersForConsumer = async (consumerId: number) => {
   const accounts = await getAccounts();
-  const generatorAddress = accounts[generatorId];
-  const transfers = await getTransfersByAddress(generatorAddress);
+  const consumerAddress = accounts[consumerId];
+
+  const transfers = await getTransfersByAddress(consumerAddress);
   return transfers;
 };

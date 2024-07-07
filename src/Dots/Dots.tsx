@@ -97,7 +97,7 @@ const scaleCoordinates = (
   }));
 };
 
-export const scaledDots = scaleCoordinates(dots, 900, 750);
+export const scaledDots = scaleCoordinates(dots, 850, 750);
 
 const Dots = (props: DotsProps) => {
   const {
