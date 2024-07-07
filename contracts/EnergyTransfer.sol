@@ -2,14 +2,14 @@
 pragma solidity ^0.8.0;
 
 contract EnergyTransfer {
-    uint256 public constant PRICE_PER_MWH = 23000; // Цена указана в центах, т.е. 10 центов = 0.10 долларов
+    uint256 public constant PRICE_PER_MWH = 23000; // Price in Kazakhstani Tenge
 
     struct Transfer {
         address generator;
         address consumer;
-        uint256 energyGenerated; // в кВт
-        uint256 energyReceived; // в кВт
-        uint256 cost; // в центах
+        uint256 energyGenerated; // in MWh
+        uint256 energyReceived; // in MWh
+        uint256 cost; // in Tenge
     }
 
     Transfer[] public transfers;
@@ -22,18 +22,27 @@ contract EnergyTransfer {
         uint256 cost
     );
 
+    event EtherTransferred(address indexed from, address indexed to, uint256 value);
+
+    mapping(address => uint256) public balanceOf;
+
     function logEnergyTransfer(
         address _generator,
         address _consumer,
         uint256 _energyGenerated,
         uint256 _lossCoefficient
-    ) public {
+    ) public payable {
         require(_energyGenerated > 0, "Energy generated must be greater than zero");
         require(_lossCoefficient >= 0 && _lossCoefficient <= 100, "Loss coefficient must be between 0 and 100");
 
         uint256 energyLoss = (_energyGenerated * _lossCoefficient) / 100;
         uint256 energyReceived = _energyGenerated - energyLoss;
         uint256 cost = (energyReceived * PRICE_PER_MWH);
+
+        uint256 etherPrice = getEtherPrice(); // Mock function to get the price of Ether in Tenge
+        uint256 costInEther = (cost * 1 ether) / etherPrice;
+
+        require(msg.value >= costInEther, "Insufficient Ether sent");
 
         Transfer memory newTransfer = Transfer({
             generator: _generator,
@@ -45,7 +54,16 @@ contract EnergyTransfer {
 
         transfers.push(newTransfer);
 
+        // Transfer ether from consumer to generator
+        _transferEther(_generator, costInEther);
+
         emit TransferLogged(_generator, _consumer, _energyGenerated, energyReceived, cost);
+    }
+
+    function _transferEther(address _to, uint256 _value) internal {
+        require(address(this).balance >= _value, "Insufficient contract balance");
+        payable(_to).transfer(_value);
+        emit EtherTransferred(msg.sender, _to, _value);
     }
 
     function getTransferCount() public view returns (uint256) {
@@ -88,5 +106,10 @@ contract EnergyTransfer {
         }
 
         return result;
+    }
+
+    // Mock function to get Ether price in Tenge
+    function getEtherPrice() public pure returns (uint256) {
+        return 1435457;
     }
 }

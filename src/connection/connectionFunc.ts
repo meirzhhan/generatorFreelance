@@ -30,8 +30,10 @@ const logEnergyTransfer = async (
 
   await contract.methods
     .logEnergyTransfer(generator, consumer, energyGenerated, lossCoefficient)
-    .send({ from: generator, gas: 500000 });
+    .send({ from: generator, value: web3.utils.toWei('1', 'ether'), gas: 500000 });
 };
+
+
 // @ts-ignore
 const getTransfersByAddress = async (address) => {
   const contract = await getContract();
