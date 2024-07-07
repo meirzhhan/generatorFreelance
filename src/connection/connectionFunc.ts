@@ -1,6 +1,50 @@
-// TODO: Limit multiple generator after fix
-
+import Web3 from 'web3';
 import { InfoDataType } from '../App';
+import EnergyTransfer from '../../build/contracts/EnergyTransfer.json'; // Убедитесь, что путь к файлу правильный
+
+const web3 = new Web3('http://127.0.0.1:7545');
+
+const getContract = async () => {
+  const networkId = await web3.eth.net.getId(); // @ts-ignore
+  const deployedNetwork = EnergyTransfer.networks[networkId];
+  const contract = new web3.eth.Contract( // @ts-ignore
+    EnergyTransfer.abi,
+    deployedNetwork && deployedNetwork.address,
+  );
+  return contract;
+};
+
+const getAccounts = async () => {
+  const accounts = await web3.eth.getAccounts();
+  return accounts;
+};
+
+const logEnergyTransfer = async (
+  // @ts-ignore
+  generator, // @ts-ignore
+  consumer, // @ts-ignore
+  energyGenerated, // @ts-ignore
+  lossCoefficient,
+) => {
+  const contract = await getContract();
+  // Преобразование значений в целые числа
+  // const energyGeneratedInt = Math.round(energyGenerated * 1e6); // например, 1e6 для перевода в микроединицы
+  // const lossCoefficientInt = Math.round(lossCoefficient * 1e6);
+
+  await contract.methods
+    .logEnergyTransfer(generator, consumer, energyGenerated, lossCoefficient)
+    .send({ from: generator, gas: 500000 });
+};
+// @ts-ignore
+const getTransfersByAddress = async (address) => {
+  const contract = await getContract();
+  const transfers = await contract.methods
+    .getTransfersByAddress(address)
+    .call();
+  return transfers;
+};
+
+// TODO: Limit multiple generator after fix
 
 interface Edge {
   to: number;
@@ -238,7 +282,7 @@ console.log(`gens: ${totalAvailableEnergy}`);
 
 const data: InfoDataType = [];
 
-export const connectionFunc = (start: number, requiredEnergy: number) => {
+export const connectionFunc = async (start: number, requiredEnergy: number) => {
   const graph = createGraph(arrows);
 
   console.log(`До: ${totalAvailableEnergy}`);
@@ -252,6 +296,8 @@ export const connectionFunc = (start: number, requiredEnergy: number) => {
   let remainingEnergy = requiredEnergy;
   const paths: InfoDataType = [];
   let availableGenerators = [...generators]; // Copy of the generators array
+
+  const accounts = await getAccounts();
 
   while (remainingEnergy > 0 && availableGenerators.length > 0) {
     const result = findOptimalPathForConsumer(
@@ -285,6 +331,22 @@ export const connectionFunc = (start: number, requiredEnergy: number) => {
       requested: String(energyToTransfer),
     });
 
+    const generatorAddress = accounts[generator]; // Преобразование идентификатора генератора в адрес
+    const consumerAddress = accounts[start]; // Преобразование идентификатора потребителя в адрес
+
+    if (!generators.includes(Number(generatorAddress))) {
+      try {
+        await logEnergyTransfer(
+          generatorAddress,
+          consumerAddress,
+          Math.floor(energyToTransfer),
+          Math.ceil(loss),
+        );
+      } catch (error) {
+        console.error(`Ошибка при логировании энергопередачи: ${error}`);
+      }
+    }
+
     // Remove generator with zero or negative energy from the available list
     availableGenerators = availableGenerators.filter(
       (gen) => generatorEnergy[gen] > 0,
@@ -300,4 +362,11 @@ export const connectionFunc = (start: number, requiredEnergy: number) => {
     generatorEnergy,
     totalAvailableEnergy,
   };
+};
+
+export const getTransfersForGenerator = async (generatorId: number) => {
+  const accounts = await getAccounts();
+  const generatorAddress = accounts[generatorId];
+  const transfers = await getTransfersByAddress(generatorAddress);
+  return transfers;
 };
