@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import Diagram from './Diagram/Diagram';
 import Info from './Info/Info';
@@ -36,35 +36,37 @@ function App() {
   }>(generatorEnergy);
   const [transactionsData, setTransactionsData] = useState<Transactions>([]);
 
-  const initConnections = useCallback(
-    async (id: number, consumption: number) => {
-      try {
-        const { data, totalAvailableEnergy, generatorEnergy } =
-          await connectionFunc(id, consumption);
+  // const initConnections = useCallback(
+  //   async (consumerId: number, consumption: number) => {
+  //     const requestedEnergy = Math.floor(consumption);
+  //     try {
+  //       const { data, totalAvailableEnergy, generatorEnergy } =
+  //         await connectionFunc(consumerId, requestedEnergy);
 
-        if (data) {
-          setConnectionData(data);
-          setTotalAvailableEnergy(totalAvailableEnergy);
-          setGeneratorsEnergy(generatorEnergy);
-        }
-      } catch (error) {
-        console.error('Ошибка при инициализации соединений:', error);
-      }
-    },
-    [],
-  );
+  //       if (data) {
+  //         setConnectionData(data);
+  //         setTotalAvailableEnergy(totalAvailableEnergy);
+  //         setGeneratorsEnergy(generatorEnergy);
+  //       }
+  //     } catch (error) {
+  //       console.error('Ошибка при инициализации соединений:', error);
+  //     }
+  //   },
+  //   [],
+  // );
 
   //
   useEffect(() => {
     const init = async () => {
       for (const dot of dots) {
         if (dot.consumption && dot.consumption > 0) {
-          await initConnections(dot.id, dot.consumption);
+          await connect(true, dot.id, dot.consumption);
+          await new Promise((resolve) => setTimeout(resolve, 2500));
         }
       }
     };
     init();
-  }, [initConnections]);
+  }, []);
 
   // Функция для изменения инпута
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,8 +96,12 @@ function App() {
   };
 
   // Функция для подключения
-  const connect = async () => {
-    if (selectedDot && value) {
+  const connect = async (
+    isInit: boolean,
+    consumerId?: number,
+    consumption?: number,
+  ) => {
+    if (selectedDot && value && isInit === false) {
       const requestedEnergy = parseFloat(value);
       const { data, totalAvailableEnergy, generatorEnergy } =
         await connectionFunc(selectedDot, requestedEnergy);
@@ -106,6 +112,15 @@ function App() {
         setGeneratorsEnergy(generatorEnergy);
       }
       setIsInputVisible(false);
+    } else if (isInit === true && consumerId && consumption) {
+      const { data, totalAvailableEnergy, generatorEnergy } =
+        await connectionFunc(consumerId, consumption);
+
+      if (data) {
+        setConnectionData(data);
+        setTotalAvailableEnergy(totalAvailableEnergy);
+        setGeneratorsEnergy(generatorEnergy);
+      }
     }
   };
 

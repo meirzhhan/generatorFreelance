@@ -21,26 +21,28 @@ const getAccounts = async () => {
 
 const logEnergyTransfer = async (
   // @ts-ignore
-  generator, // @ts-ignore
-  consumer, // @ts-ignore
-  energyGenerated, // @ts-ignore
-  lossCoefficient,
+  generator: string,
+  consumer: string,
+  energyGenerated: number,
+  lossCoefficient: number,
 ) => {
   const contract = await getContract();
 
   await contract.methods
     .logEnergyTransfer(generator, consumer, energyGenerated, lossCoefficient)
-    .send({ from: consumer, value: web3.utils.toWei('1', 'ether'), gas: 5000000 });
+    .send({
+      from: consumer,
+      value: web3.utils.toWei('1', 'ether'),
+      gas: 5000000,
+    });
 };
-
-
 
 // @ts-ignore
 const getTransfersByAddress = async (address) => {
   const contract = await getContract();
   const transfers = await contract.methods
-  .getTransfersByAddress(address)
-  .call();
+    .getTransfersByAddress(address)
+    .call();
   return transfers;
 };
 
@@ -283,16 +285,17 @@ const data: InfoDataType = [];
 
 export const connectionFunc = async (start: number, requiredEnergy: number) => {
   const graph = createGraph(arrows);
+  const consumer = start; // consumer requesting energy
+
+  let remainingEnergy = requiredEnergy;
 
   console.log(`До: ${totalAvailableEnergy}`);
-  const consumer = start; // consumer requesting energy
 
   // if (requiredEnergy > totalAvailableEnergy) {
   //   alert('Not enough total energy to satisfy the request.');
   //   return {};
   // }
 
-  let remainingEnergy = requiredEnergy;
   const paths: InfoDataType = [];
   let availableGenerators = [...generators]; // Copy of the generators array
 
@@ -333,7 +336,7 @@ export const connectionFunc = async (start: number, requiredEnergy: number) => {
     const generatorAddress = accounts[generator]; // Преобразование идентификатора генератора в адрес
     const consumerAddress = accounts[start]; // Преобразование идентификатора потребителя в адрес
 
-    if (!generators.includes(Number(generatorAddress))) {
+    if (!generators.includes(start)) {
       try {
         await logEnergyTransfer(
           generatorAddress,

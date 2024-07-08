@@ -6,7 +6,7 @@ interface InfoProps {
   isInputVisible: boolean;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClickButton: () => void;
+  onClickButton: (isInit: boolean) => void;
   selectedConsumer?: number;
 }
 
@@ -41,7 +41,7 @@ const Info = (props: InfoProps) => {
           <button
             style={{ width: 70 }}
             className={isInputVisible ? 'inputButton' : 'inputButton disable'}
-            onClick={onClickButton}
+            onClick={() => onClickButton(false)}
           >
             Получить
           </button>
