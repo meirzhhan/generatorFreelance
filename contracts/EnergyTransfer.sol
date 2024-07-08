@@ -41,6 +41,9 @@ contract EnergyTransfer {
         uint256 energyLoss = (_energyGenerated * _lossCoefficient) / 100;
         uint256 energyReceived = _energyGenerated - energyLoss;
         uint256 cost = (energyReceived * PRICE_PER_MWH);
+        uint256 costInEther = (cost * 1 ether) / ETHER_PRICE_IN_TENGE;
+
+        require(msg.value >= costInEther, "Insufficient Ether sent");
 
         Transfer memory newTransfer = Transfer({
             generator: _generator,
@@ -54,7 +57,7 @@ contract EnergyTransfer {
 
         emit TransferLogged(_generator, _consumer, _energyGenerated, energyReceived, cost);
 
-        sendEther(_consumer, _generator, cost);
+        sendEther(_consumer, _generator, costInEther);
     }
 
     function getTransferCount() public view returns (uint256) {
@@ -99,13 +102,12 @@ contract EnergyTransfer {
         return result;
     }
 
-    function sendEther(address _from, address _to, uint256 totalEnergyCost) internal returns (bool success) {
-        uint256 costInEther = (totalEnergyCost * 1 ether) / ETHER_PRICE_IN_TENGE;
+    function sendEther(address _consumer, address _generator, uint256 costInEther) internal returns (bool success) {
         require(address(this).balance >= costInEther, "Insufficient contract balance");
 
-        payable(_to).transfer(costInEther);
+        payable(_generator).transfer(costInEther);
 
-        emit EtherSent(_from, _to, costInEther);
+        emit EtherSent(_consumer, _generator, costInEther);
         return true;
     }
 
