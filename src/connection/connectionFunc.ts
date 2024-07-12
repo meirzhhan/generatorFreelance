@@ -20,35 +20,42 @@ const getAccounts = async () => {
 };
 
 const logEnergyTransfer = async (
-  // @ts-ignore
   generator: string,
   consumer: string,
   energyGenerated: number,
-  lossCoefficient: number
+  lossCoefficient: number,
 ) => {
   const contract = await getContract();
 
   const PRICE_PER_MWH = 23000;
   const etherPrice = 1435457; // Example Ether price in Tenge
-  const costInTenge = (energyGenerated * PRICE_PER_MWH) * (1 - lossCoefficient); // Calculate cost in Tenge
-  const costInEther = (costInTenge / etherPrice).toString();
-  console.log("etherPrice " + etherPrice)
-  console.log("PRICE_PER_MWH " + PRICE_PER_MWH)
-  console.log("energyGenerated " + energyGenerated)
-  console.log("lossCoefficient " + lossCoefficient)
-  console.log("1-lossCoefficient = " + (1 - lossCoefficient))
-  console.log("costInTenge " + costInTenge)
-  console.log("Cost in ether " + costInEther)
-  console.log("substring= " + costInEther.substring(0, 5))
 
+  const lossCoefficientPercent = Math.floor(lossCoefficient * 100);
+  const energyGeneratedInt = Math.floor(energyGenerated);
+
+  // Пересчитаем затраты
+  const energyLoss = (energyGeneratedInt * lossCoefficientPercent) / 100;
+  const energyReceived = energyGeneratedInt - energyLoss;
+  const costInTenge = energyReceived * PRICE_PER_MWH;
+  const costInEther = (costInTenge / etherPrice).toString();
+  const costInEtherWei = web3.utils.toWei(costInEther, 'ether');
+
+  console.log("etherPrice= " + etherPrice)
+  console.log("PRICE_PER_MWH= " + PRICE_PER_MWH)
+  console.log("energyGenerated= " + energyGeneratedInt)
+  console.log("lossCoefficient= " + lossCoefficientPercent)
+  console.log("1-lossCoefficient= " + (1 - lossCoefficient))
+  console.log("costInTenge= " + costInTenge)
+  console.log("Cost in ether= " + costInEther)
+  console.log("Cost in Wei= " + costInEtherWei)
 
   await contract.methods
-    .logEnergyTransfer(generator, consumer, energyGenerated, lossCoefficient)
-    .send({
-      from: consumer,
-      value: web3.utils.toWei('1', 'ether'),
-      gas: 5000000,
-    });
+  .logEnergyTransfer(generator, consumer, energyGeneratedInt, lossCoefficientPercent, costInEtherWei)
+  .send({
+    from: consumer,
+    value: costInEtherWei,
+    gas: 5000000,
+  });
 };
 
 // @ts-ignore

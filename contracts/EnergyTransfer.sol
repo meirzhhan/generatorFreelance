@@ -33,7 +33,8 @@ contract EnergyTransfer {
         address _generator,
         address _consumer,
         uint256 _energyGenerated,
-        uint256 _lossCoefficient
+        uint256 _lossCoefficient,
+        uint256 _costInEther
     ) public payable {
         require(_energyGenerated > 0, "Energy generated must be greater than zero");
         require(_lossCoefficient >= 0 && _lossCoefficient <= 100, "Loss coefficient must be between 0 and 100");
@@ -41,9 +42,8 @@ contract EnergyTransfer {
         uint256 energyLoss = (_energyGenerated * _lossCoefficient) / 100;
         uint256 energyReceived = _energyGenerated - energyLoss;
         uint256 cost = (energyReceived * PRICE_PER_MWH);
-        uint256 costInEther = (cost * 1 ether) / ETHER_PRICE_IN_TENGE;
 
-        require(msg.value >= costInEther, "Insufficient Ether sent");
+        require(msg.value >= _costInEther, "Insufficient Ether sent");
 
         Transfer memory newTransfer = Transfer({
             generator: _generator,
@@ -57,7 +57,7 @@ contract EnergyTransfer {
 
         emit TransferLogged(_generator, _consumer, _energyGenerated, energyReceived, cost);
 
-        sendEther(_consumer, _generator, costInEther);
+        sendEther(_consumer, _generator, _costInEther);
     }
 
     function getTransferCount() public view returns (uint256) {
