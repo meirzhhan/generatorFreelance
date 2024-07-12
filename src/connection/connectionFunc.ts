@@ -24,9 +24,23 @@ const logEnergyTransfer = async (
   generator: string,
   consumer: string,
   energyGenerated: number,
-  lossCoefficient: number,
+  lossCoefficient: number
 ) => {
   const contract = await getContract();
+
+  const PRICE_PER_MWH = 23000;
+  const etherPrice = 1435457; // Example Ether price in Tenge
+  const costInTenge = (energyGenerated * PRICE_PER_MWH) * (1 - lossCoefficient); // Calculate cost in Tenge
+  const costInEther = (costInTenge / etherPrice).toString();
+  console.log("etherPrice " + etherPrice)
+  console.log("PRICE_PER_MWH " + PRICE_PER_MWH)
+  console.log("energyGenerated " + energyGenerated)
+  console.log("lossCoefficient " + lossCoefficient)
+  console.log("1-lossCoefficient = " + (1 - lossCoefficient))
+  console.log("costInTenge " + costInTenge)
+  console.log("Cost in ether " + costInEther)
+  console.log("substring= " + costInEther.substring(0, 5))
+
 
   await contract.methods
     .logEnergyTransfer(generator, consumer, energyGenerated, lossCoefficient)
@@ -341,8 +355,8 @@ export const connectionFunc = async (start: number, requiredEnergy: number) => {
         await logEnergyTransfer(
           generatorAddress,
           consumerAddress,
-          Math.floor(energyToTransfer),
-          Math.ceil(loss),
+          energyToTransfer,
+          loss,
         );
       } catch (error) {
         console.error(`Ошибка при логировании энергопередачи: ${error}`);
