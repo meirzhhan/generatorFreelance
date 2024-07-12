@@ -34,17 +34,16 @@ const logEnergyTransfer = async (
   const energyGeneratedInt = Math.floor(energyGenerated);
 
   // Пересчитаем затраты
-  const energyLoss = (energyGeneratedInt * lossCoefficientPercent) / 100;
-  const energyReceived = energyGeneratedInt - energyLoss;
+  const energyReceived = Math.floor(energyGenerated-lossCoefficient)
   const costInTenge = energyReceived * PRICE_PER_MWH;
   const costInEther = (costInTenge / etherPrice).toString();
   const costInEtherWei = web3.utils.toWei(costInEther, 'ether');
 
   console.log("etherPrice= " + etherPrice)
   console.log("PRICE_PER_MWH= " + PRICE_PER_MWH)
-  console.log("energyGenerated= " + energyGeneratedInt)
-  console.log("lossCoefficient= " + lossCoefficientPercent)
-  console.log("1-lossCoefficient= " + (1 - lossCoefficient))
+  console.log("energyGeneratedInt= " + energyGeneratedInt)
+  console.log("lossCoefficientPercent= " + lossCoefficientPercent)
+  console.log("energyReceived= " + energyReceived)
   console.log("costInTenge= " + costInTenge)
   console.log("Cost in ether= " + costInEther)
   console.log("Cost in Wei= " + costInEtherWei)
