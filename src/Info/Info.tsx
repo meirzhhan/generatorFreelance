@@ -1,16 +1,15 @@
-import React from 'react';
-import { InfoDataType } from '../App';
+import { InfoDataType } from '../App'; // Импорт типа данных InfoDataType из App.tsx
 
-interface InfoProps {
-  infoData: InfoDataType;
-  isInputVisible: boolean;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClickButton: (isInit: boolean) => void;
-  selectedConsumer?: number;
+interface ConnectionInfoProps {
+  infoData: InfoDataType; // Массив объектов данных о подключении
+  isInputVisible: boolean; // Видимость инпута (true или false)
+  value: string; // Значение инпута
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // Функция для изменения инпута
+  onClickButton: (isInit: boolean) => void; // Функция для обработки клика на кнопку
+  selectedConsumer?: number; // Выбранный потребитель (опционально)
 }
 
-const Info = (props: InfoProps) => {
+const ConnectionsInfo = (props: ConnectionInfoProps) => {
   const {
     isInputVisible,
     value,
@@ -22,11 +21,14 @@ const Info = (props: InfoProps) => {
 
   return (
     <div className="InfoWrapper">
+      {/* Инпут и кнопка подключения */}
       <div className="header">
         <p>
-          {selectedConsumer
-            ? `Потребитель: ${selectedConsumer}`
-            : 'Выберите потребителя'}
+          {
+            selectedConsumer
+              ? `Потребитель: ${selectedConsumer}` // Отображение выбранного потребителя
+              : 'Выберите потребителя' // Сообщение, если потребитель не выбран
+          }
         </p>
 
         <div className="inputButtonWrapper">
@@ -35,19 +37,22 @@ const Info = (props: InfoProps) => {
             className={isInputVisible ? 'inputButton' : 'inputButton disable'}
             type="number"
             value={value}
-            onChange={onChange}
+            onChange={onChange} // Обработчик изменения инпута
             placeholder="Введите количество"
           />
           <button
             style={{ width: 70 }}
             className={isInputVisible ? 'inputButton' : 'inputButton disable'}
-            onClick={() => onClickButton(false)}
+            onClick={() => onClickButton(false)} // Обработчик клика на кнопку. false - это ручное подключение
           >
             Получить
           </button>
         </div>
       </div>
+
+      {/* Данные о подключении */}
       <div className="infoItems" style={{ marginTop: 15 }}>
+        {/* // Проход по массиву данных и отображение каждого элемента */}
         {infoData.map((item, index) => (
           <div key={index} className="infoItem">
             <p>
@@ -71,4 +76,4 @@ const Info = (props: InfoProps) => {
   );
 };
 
-export default Info;
+export default ConnectionsInfo;

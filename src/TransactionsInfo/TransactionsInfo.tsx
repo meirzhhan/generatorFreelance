@@ -1,15 +1,17 @@
-type Transaction = [string, string, string, string, string];
-export type Transactions = Transaction[];
+type Transaction = [string, string, string, string, string]; // Тип для транзакции
+export type Transactions = Transaction[]; // Тип для массива транзакций
 
 interface TransactionsInfoProps {
-  transactions?: Transactions;
-  consumer: number;
+  transactions?: Transactions; // Список транзакций. может не быть для выбранного потребителя
+  consumer: number; // ID потребителя
 }
 
 const TransactionsInfo = (props: TransactionsInfoProps) => {
   const { transactions, consumer } = props;
 
-  if (!transactions || transactions.length === 0) return null;
+  // Если нет транзакций
+  if (!transactions || transactions.length === 0)
+    return <div>Нет активных подключений для потребителя: {consumer}</div>;
 
   return (
     <div className="TransactionWrapper">

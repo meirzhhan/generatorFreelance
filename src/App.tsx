@@ -1,130 +1,118 @@
 import { useEffect, useState } from 'react';
-import './App.css';
-import Diagram from './Diagram/Diagram';
-import Info from './Info/Info';
+
+// Компоненты
+import GeneratorsInfo from './GeneratorsInfo/Generators';
+import Map from './Diagram/Map'; // Импорт компонента Map
+import ConnectionsInfo from './Info/Info';
+import TransactionsInfo, {
+  Transactions,
+} from './TransactionsInfo/TransactionsInfo'; // импорт компонента и типа Transactions
+
 import {
   connectionFunc,
   generatorEnergy,
   generators,
   getTransfersForConsumer,
-} from './connection/connectionFunc';
-import { dots } from './Dots/Dots';
-import GeneratorsInfo from './GeneratorsInfo/Generators';
-import TransactionsInfo, {
-  Transactions,
-} from './TransactionsInfo/TransactionsInfo';
+} from './connection/connectionFunc'; // Импорт функций и данных из connectionFunc
 
+import { dots } from './Dots/Dots'; // Импорт массива точек dots
+import './App.css'; // Импорт стилей из App.css
+
+// Типы для возвращаемых данных результата функции connectionFunc
 export interface Info {
-  consumer: number; // Потребитель
-  generator: number; // Генератор
-  loss: number; // Потери
-  road: string; // путь до потребителя от генератора, Пример: [3, 5, 7, 2] = 3 => 5 => 7
-  requested: string; // запрошенное количество
+  consumer: number; // Потребитель ID
+  generator: number; // Генератор ID
+  loss: number; // Общие потери от генератора к потребителю
+  road: string; // Путь до потребителя от генератора(массив), Пример [3, 5, 7, 2]
+  requested: string; // запрошенное количество энергии
 }
-
 export type InfoDataType = Info[];
 
 function App() {
-  const [connectionData, setConnectionData] = useState<InfoDataType>([]); // Возвращаемые Данные
-
-  const [value, setValue] = useState(''); // Значение инпута
-  const [isInputVisible, setIsInputVisible] = useState(false); // Видимость инпута
-  const [selectedDot, setSelectedDot] = useState(0); // Выбранный потребитель
-  const [totalAvailableEnergy, setTotalAvailableEnergy] = useState<number>(0); // 1000
+  const [connectionData, setConnectionData] = useState<InfoDataType>([]); // Состояние возвращаемых данных. Тип выше
+  const [inputValue, setInputValue] = useState(''); // Состояние для значения инпута
+  const [isInputVisible, setIsInputVisible] = useState(false); // Состояние для видимости инпута
+  const [selectedDot, setSelectedDot] = useState(0); // Состояние для выбранного ID потребителя
+  const [totalAvailableEnergy, setTotalAvailableEnergy] = useState<number>(0); // Состояние общей доступной энергии
   const [generatorsEnergy, setGeneratorsEnergy] = useState<{
-    [key: number]: number; // 1 = 100
+    [key: number]: number; // Объект, где ключ - ID генератора, значение - доступная энергия
   }>(generatorEnergy);
-  const [transactionsData, setTransactionsData] = useState<Transactions>([]);
+  const [transactionsData, setTransactionsData] = useState<Transactions>([]); // Данные о транзакциях
 
-  // const initConnections = useCallback(
-  //   async (consumerId: number, consumption: number) => {
-  //     const requestedEnergy = Math.floor(consumption);
-  //     try {
-  //       const { data, totalAvailableEnergy, generatorEnergy } =
-  //         await connectionFunc(consumerId, requestedEnergy);
-
-  //       if (data) {
-  //         setConnectionData(data);
-  //         setTotalAvailableEnergy(totalAvailableEnergy);
-  //         setGeneratorsEnergy(generatorEnergy);
-  //       }
-  //     } catch (error) {
-  //       console.error('Ошибка при инициализации соединений:', error);
-  //     }
-  //   },
-  //   [],
-  // );
-
-  //
+  // Инициализация данных при загрузке компонента
   useEffect(() => {
     const init = async () => {
+      // Цикл проходит по каждым точкам (потребители или генераторы)
       for (const dot of dots) {
-        if (dot.consumption && dot.consumption > 0) {
-          await connect(true, dot.id, dot.consumption);
-          await new Promise((resolve) => setTimeout(resolve, 2500));
+        // Если требуемая энергия выше нуля
+        if (dot.consumption > 0) {
+          await connect(true, dot.id, dot.consumption); // Передает в функцию true(инициализация), id, кол-во
+          await new Promise((resolve) => setTimeout(resolve, 250)); // Задержка 250 мс между подключениями
         }
       }
     };
+
     init();
   }, []);
 
   // Функция для изменения инпута
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+    setInputValue(e.target.value);
   };
 
-  // Функция для открытия инпута и установления выбранного потребителя
+  // Функция для открытия инпута и установления ID выбранного потребителя
   const onClickDot = async (id: number) => {
     if (!generators.includes(id)) {
-      setSelectedDot(id);
-      setIsInputVisible(true);
+      setSelectedDot(id); // Установка выбранного потребителя в состояние
+      setIsInputVisible(true); // Видимость инпута => true
 
-      // Сброс текущих данных транзакций
-      setTransactionsData([]);
+      setTransactionsData([]); // Сброс состояния для данных транзакций
 
       let transfers;
       transfers = [];
+      transfers = await getTransfersForConsumer(id); // Получение транзакций для выбранного ID потребителя
 
-      transfers = await getTransfersForConsumer(id);
       if (transfers) {
-        setTransactionsData(transfers);
-        console.log(JSON.stringify(transfers));
-      } else {
-        setTransactionsData([]);
+        setTransactionsData(transfers); // Установка данных о транзакциях если они есть
       }
     }
   };
 
-  // Функция для подключения
+  // Функция обертка для подключения, которая прокидывает данные для функции connectionFunc
   const connect = async (
-    isInit: boolean,
-    consumerId?: number,
-    consumption?: number,
+    isInit: boolean, // Флаг инициализации. Если true - инициализация, false - ручное подключение
+    consumerId?: number, // ID потребителя
+    consumption?: number, // Запрашиваемое кол-во энергии
   ) => {
-    if (selectedDot && value && isInit === false) {
-      const requestedEnergy = parseFloat(value);
+    // Если в inputValue есть число и если это ручное подключение(false)
+    if (inputValue && isInit === false) {
+      const requestedEnergy = Number(inputValue); // string в number
+
+      // Вызов функции connectionFunc с передачей ID, запрашиваемое кол-во. Функция возвращает данные о подключении, общее доступное кол-во энергии, доступная энергия у генов
       const { data, totalAvailableEnergy, generatorEnergy } =
         await connectionFunc(selectedDot, requestedEnergy);
 
       if (data) {
-        setConnectionData(data);
-        setTotalAvailableEnergy(totalAvailableEnergy);
-        setGeneratorsEnergy(generatorEnergy);
+        setConnectionData(data); // Установка данных о подключении в состояние
+        setTotalAvailableEnergy(totalAvailableEnergy); // Установка общей доступной энергии в состояние
+        setGeneratorsEnergy(generatorEnergy); // Установка данных о доступной энергии у генераторов в состояние
       }
-      setIsInputVisible(false);
-    } else if (isInit === true && consumerId && consumption) {
+      setIsInputVisible(false); // Скрытие инпута после подключения
+    }
+
+    // Если это инициализация
+    if (isInit === true && consumerId && consumption) {
+      // Вызов функции connectionFunc с передачей ID, запрашиваемое кол-во. Функция возвращает данные о подключении, общее доступное кол-во энергии, доступная энергия у генов
       const { data, totalAvailableEnergy, generatorEnergy } =
         await connectionFunc(consumerId, consumption);
 
       if (data) {
-        setConnectionData(data);
-        setTotalAvailableEnergy(totalAvailableEnergy);
-        setGeneratorsEnergy(generatorEnergy);
+        setConnectionData(data); // Установка данных о подключении в состояние
+        setTotalAvailableEnergy(totalAvailableEnergy); // Установка общей доступной энергии в состояние
+        setGeneratorsEnergy(generatorEnergy); // Установка данных о доступной энергии у генераторов в состояние
       }
     }
   };
-
-  // console.log(connectionData);
 
   return (
     <div className="App">
@@ -133,14 +121,14 @@ function App() {
         totalEnergy={totalAvailableEnergy}
       />
 
-      <Diagram onClickDot={onClickDot} />
+      <Map onClickDot={onClickDot} />
 
-      <Info
+      <ConnectionsInfo
         infoData={connectionData}
         onClickButton={connect}
         isInputVisible={isInputVisible}
         onChange={onChangeInput}
-        value={value}
+        value={inputValue}
         selectedConsumer={selectedDot}
       />
 

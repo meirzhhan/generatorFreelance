@@ -1,194 +1,213 @@
 import Web3 from 'web3';
 import { InfoDataType } from '../App';
-import EnergyTransfer from '../../build/contracts/EnergyTransfer.json'; // Убедитесь, что путь к файлу правильный
 
-const web3 = new Web3('http://127.0.0.1:7545');
+import EnergyTransfer from '../../build/contracts/EnergyTransfer.json'; // Импорт ABI и адресов контракта EnergyTransfer
+
+interface Edge {
+  to: number; // ID узла(точки), в который ведет это ребро
+  weight: number; // потери до этого ребра
+}
+
+interface NodeE {
+  id: number; // ID узла(точки)
+  edges: Edge[]; // Список ребер(точек), исходящих из этого узла
+}
+
+interface Graph {
+  [key: number]: NodeE; // Граф, где ключ - ID узла, а значение - узел с его ребрами
+}
+
+interface Distance {
+  [key: number]: number; // Расстояния(потери) от начального узла до каждого другого узла
+}
+
+interface Previous {
+  [key: number]: number | null; // Предыдущий узел в оптимальном пути для каждого узла
+}
+
+interface OptimalPath {
+  generator: number; // ID генератора
+  path: number[]; // Оптимальный путь от генератора до потребителя
+  loss: number; // Потери на этом пути
+  availableEnergy: number; // Доступная энергия у генератора
+}
+
+const web3 = new Web3('http://127.0.0.1:7545'); // Создание экземпляра Web3 и подключение
 
 const getContract = async () => {
-  const networkId = await web3.eth.net.getId(); // @ts-ignore
-  const deployedNetwork = EnergyTransfer.networks[networkId];
-  const contract = new web3.eth.Contract( // @ts-ignore
+  const networkId = await web3.eth.net.getId(); // @ts-ignore // Получение идентификатора сети
+  const deployedNetwork = EnergyTransfer.networks[networkId]; // Получение информации о развернутой сети контракта
+  const contract = new web3.eth.Contract( // @ts-ignore // Создание экземпляра контракта
     EnergyTransfer.abi,
     deployedNetwork && deployedNetwork.address,
   );
+
   return contract;
 };
 
+// Функция для получения аккаунтов
 const getAccounts = async () => {
-  const accounts = await web3.eth.getAccounts();
+  const accounts = await web3.eth.getAccounts(); // Получение списка аккаунтов
+
   return accounts;
 };
 
 const logEnergyTransfer = async (
-  generator: string,
-  consumer: string,
-  energyGenerated: number,
-  lossCoefficient: number,
+  generator: string, // Адрес генератора
+  consumer: string, // Адрес потребителя
+  energyGenerated: number, // Полученное кол-во энергии
+  lossCoefficient: number, // Потери
 ) => {
-  const contract = await getContract();
+  const contract = await getContract(); // Получение контракта
 
-  const PRICE_PER_MWH = 23000;
-  const etherPrice = 100; // Example Ether price in Tenge
+  const PRICE_PER_MWH = 23000; // Цена за мегаватт-час в тенге
+  const etherPrice = 1; // Цена эфира в тенге
 
-  const lossCoefficientPercent = Math.floor(lossCoefficient * 100);
-  const energyGeneratedInt = Math.floor(energyGenerated);
+  const lossCoefficientPercent = Math.floor(lossCoefficient * 100); // Преобразование коэффициента потерь в проценты
+  const energyGeneratedInt = Math.floor(energyGenerated); // Округление сгенерированной энергии до целого числа
 
-  // Пересчитаем затраты
-  const energyReceived = Math.floor(energyGenerated-lossCoefficient)
-  const costInTenge = energyGenerated * PRICE_PER_MWH;
-  const costInEther = (costInTenge / etherPrice).toString();
-  const costInEtherWei = web3.utils.toWei(costInEther, 'ether');
+  // Пересчёт затрат
+  const energyReceived = Math.floor(energyGenerated - lossCoefficient); // Расчет полученной энергии
+  const costInTenge = energyGenerated * PRICE_PER_MWH; // Стоимость в тенге
+  const costInEther = (costInTenge / etherPrice).toString(); // Стоимость в эфире
+  const costInEtherWei = web3.utils.toWei(costInEther, 'ether'); // Стоимость в Wei
 
-  console.log("etherPrice= " + etherPrice)
-  console.log("PRICE_PER_MWH= " + PRICE_PER_MWH)
-  console.log("energyGeneratedInt= " + energyGeneratedInt)
-  console.log("lossCoefficientPercent= " + lossCoefficientPercent)
-  console.log("energyReceived= " + energyReceived)
-  console.log("costInTenge= " + costInTenge)
-  console.log("Cost in ether= " + costInEther)
-  console.log("Cost in Wei= " + costInEtherWei)
+  console.log('etherPrice= ' + etherPrice);
+  console.log('PRICE_PER_MWH= ' + PRICE_PER_MWH);
+  console.log('energyGeneratedInt= ' + energyGeneratedInt);
+  console.log('lossCoefficientPercent= ' + lossCoefficientPercent);
+  console.log('energyReceived= ' + energyReceived);
+  console.log('costInTenge= ' + costInTenge);
+  console.log('Cost in ether= ' + costInEther);
+  console.log('Cost in Wei= ' + costInEtherWei);
 
+  // вызов метода контракта с передачей полученных данных
   await contract.methods
-  .logEnergyTransfer(generator, consumer, energyGeneratedInt, lossCoefficientPercent, costInEtherWei)
-  .send({
-    from: consumer,
-    value: costInEtherWei,
-    gas: 5000000,
-  });
+    .logEnergyTransfer(
+      generator,
+      consumer,
+      energyGeneratedInt,
+      lossCoefficientPercent,
+      costInEtherWei,
+    )
+    .send({
+      from: consumer,
+      value: costInEtherWei,
+      gas: 5000000,
+    });
 };
 
-// @ts-ignore
-const getTransfersByAddress = async (address) => {
-  const contract = await getContract();
+// Функция для получения данных о транзакциях для определенного ID
+const getTransfersByAddress = async (address: string) => {
+  const contract = await getContract(); // Получение контракта
   const transfers = await contract.methods
-    .getTransfersByAddress(address)
+    .getTransfersByAddress(address) // Вызов метода контракта для получения передач по адресу
     .call();
+
   return transfers;
 };
 
-// TODO: Limit multiple generator after fix
-
-interface Edge {
-  to: number;
-  weight: number;
-}
-
-interface NodeE {
-  id: number;
-  edges: Edge[];
-}
-
-interface Graph {
-  [key: number]: NodeE;
-}
-
-interface Distance {
-  [key: number]: number;
-}
-
-interface Previous {
-  [key: number]: number | null;
-}
-
-interface OptimalPath {
-  generator: number;
-  path: number[];
-  loss: number;
-  availableEnergy: number;
-}
-
-// Function to create a graph from a list of edges
+// Функция для создания графа из списка ребер
 function createGraph(edges: [number, number, number][]): Graph {
-  const graph: Graph = {};
+  const graph: Graph = {}; // Инициализация пустого графа
+
   edges.forEach(([from, to, weight]) => {
-    if (!graph[from]) graph[from] = { id: from, edges: [] };
-    if (!graph[to]) graph[to] = { id: to, edges: [] };
-    graph[from].edges.push({ to, weight });
-    graph[to].edges.push({ to: from, weight }); // reverse path
+    if (!graph[from]) graph[from] = { id: from, edges: [] }; // Если узел 'from' еще не существует в графе, создаем его
+    if (!graph[to]) graph[to] = { id: to, edges: [] }; // Если узел 'to' еще не существует в графе, создаем его
+
+    graph[from].edges.push({ to, weight }); // Добавление ребра от 'from' к 'to'
+    graph[to].edges.push({ to: from, weight }); // Добавление обратного ребра от 'to' к 'from'
   });
-  return graph;
+
+  return graph; // Возвращает созданный граф
 }
 
-// Dijkstra's algorithm
+// Алгоритм Дейкстры
 function dijkstra(
   graph: Graph,
   startNode: number,
 ): { distances: Distance; previous: Previous } {
-  const distances: Distance = {};
-  const previous: Previous = {};
-  const nodes: Set<number> = new Set(Object.keys(graph).map(Number));
+  const distances: Distance = {}; // Расстояния от начального узла до других узлов
+  const previous: Previous = {}; // Предыдущие узлы в оптимальном пути
+  const nodes: Set<number> = new Set(Object.keys(graph).map(Number)); // Множество всех узлов в графе
 
-  // Initialization
+  // Инициализация
   nodes.forEach((node) => {
-    distances[node] = Infinity;
-    previous[node] = null;
+    distances[node] = Infinity; // Расстояние до всех узлов как бесконечность
+    previous[node] = null; // Предыдущий узел пока неизвестен
   });
-  distances[startNode] = 0;
+  distances[startNode] = 0; // Расстояние до начального узла равно нулю
 
   while (nodes.size > 0) {
-    // Find the path with the minimum loss
+    // Найти путь с минимальными потерями
     let closestNode = Array.from(nodes).reduce((minNode, node) =>
       distances[node] < distances[minNode] ? node : minNode,
     );
 
-    nodes.delete(closestNode);
+    nodes.delete(closestNode); // Удаление этого узла из множества узлов
 
-    // Update distances to neighboring nodes
+    // Обновление расстояний до соседних узлов
     graph[closestNode].edges.forEach((edge) => {
-      const alt = distances[closestNode] + edge.weight;
+      const alt = distances[closestNode] + edge.weight; // Новое расстояние до соседнего узла
+
+      // Если новое расстояние меньше текущего
       if (alt < distances[edge.to]) {
-        distances[edge.to] = alt;
-        previous[edge.to] = closestNode;
+        distances[edge.to] = alt; // Обновление расстояния(потери)
+        previous[edge.to] = closestNode; // Установка текущего узла как предыдущий для соседнего
       }
     });
   }
 
-  return { distances, previous };
+  return { distances, previous }; // Возвращает расстояния и предыдущие узлы
 }
 
-// Function to get the path from the start node to the target node
+// Функция для получения пути от начального узла до целевого узла (для отрисовки во фронте)
 function getPath(
   previous: Previous,
-  startNode: number,
-  endNode: number,
+  startNodeGenerator: number, // генератор
+  endNode: number, // потребитель
 ): number[] {
-  const path: number[] = [];
-  let currentNode: number | null = endNode;
+  const path: number[] = []; // Инициализация пустого пути
+  let currentNode: number | null = endNode; // Начинает с целевого узла
 
   while (currentNode !== null) {
-    path.unshift(currentNode);
-    currentNode = previous[currentNode];
+    path.unshift(currentNode); // Добавление текущего узла в начало пути
+    currentNode = previous[currentNode]; // Переход к предыдущему узлу
   }
 
-  if (path[0] !== startNode) {
-    return []; // Path not found
+  if (path[0] !== startNodeGenerator) {
+    return []; // Путь не найден (условие не сработает. От любого потребителя проложен путь к генератору)
   }
 
-  return path;
+  return path; // найденный путь
 }
 
-// Function to find the best generator for a given consumer
+// Функция для нахождения лучшего генератора для данного потребителя
 function findOptimalPathForConsumer(
   graph: Graph,
-  generators: number[],
-  consumer: number,
-  generatorEnergy: { [key: number]: number },
+  generators: number[], // список генераторов
+  consumer: number, // ID потребителя
+  generatorEnergy: { [key: number]: number }, // энергия генераторов. Пример: 1 = 100, 2 = 120
 ): OptimalPath | null {
-  let optimalGenerator = -1;
-  let minLoss = Infinity;
-  let bestPath: number[] = [];
-  let availableEnergy = 0;
+  let optimalGenerator = -1; // Инициализация переменной для лучшего генератора
+  let minLoss = Infinity; // Инициализация переменной для минимальных потерь
+  let bestPath: number[] = []; // Инициализация переменной для лучшего пути
+  let availableEnergy = 0; // Инициализация переменной для доступной энергии
 
+  // Проходит по всем генераторам
   generators.forEach((generator) => {
-    const { distances, previous } = dijkstra(graph, generator);
+    const { distances, previous } = dijkstra(graph, generator); // Вычисление расстояния и предыдущие узлы от генератора
+
+    // Если текущее расстояние меньше минимального и у генератора есть энергия
     if (distances[consumer] < minLoss && generatorEnergy[generator] > 0) {
-      minLoss = distances[consumer];
-      optimalGenerator = generator;
-      bestPath = getPath(previous, generator, consumer);
-      availableEnergy = generatorEnergy[generator];
+      minLoss = distances[consumer]; // Обновление минимальных потерь
+      optimalGenerator = generator; // Установка текущего генератора как оптимальный
+      bestPath = getPath(previous, generator, consumer); // Нахождение пути от генератора до потребителя
+      availableEnergy = generatorEnergy[generator]; // Обновление доступной энергии
     }
   });
 
+  // Если не найден оптимальный генератор, возвращает null (Условие не отработает, все пути проложены)
   if (optimalGenerator === -1) return null;
 
   return {
@@ -199,8 +218,8 @@ function findOptimalPathForConsumer(
   };
 }
 
-// from, to, loss
-export const arrows: [number, number, number][] = [
+// Массив ребер(точек) графа. from, to, потери
+export const edges: [number, number, number][] = [
   [1, 2, 0.109], //
   [1, 15, 0.54], //
   [1, 16, 0.126], //
@@ -282,9 +301,9 @@ export const arrows: [number, number, number][] = [
   [55, 58, 0.4], //
 ];
 
-export const generators = [1, 2, 3, 6, 8, 9, 12, 16]; // array of generators
+export const generators = [1, 2, 3, 6, 8, 9, 12, 16]; // Массив генераторов
 
-// Initial energy of the generators
+// Генерируемая энергия у генераторов
 export const generatorEnergy: { [key: number]: number } = {
   1: 140.06,
   2: 73.12,
@@ -296,32 +315,37 @@ export const generatorEnergy: { [key: number]: number } = {
   16: 118000.71,
 };
 
+// Общая доступная энергия(все генераторы)
 let totalAvailableEnergy = Object.values(generatorEnergy).reduce(
   (a, b) => a + b,
   0,
 );
 
-const data: InfoDataType = [];
+const data: InfoDataType = []; // Инициализация пустого массива данных
 
-export const connectionFunc = async (start: number, requiredEnergy: number) => {
-  const graph = createGraph(arrows);
-  const consumer = start; // consumer requesting energy
+// Функция для выполнения подключения.
+export const connectionFunc = async (
+  requestingId: number, // ID, кто запросил
+  requiredEnergy: number, // требуемое кол-во энергии
+) => {
+  if (requiredEnergy > totalAvailableEnergy) {
+    alert('Недостаточно общей энергии для удовлетворения запроса.');
+    return {};
+  }
 
-  let remainingEnergy = requiredEnergy;
+  const graph = createGraph(edges); // Создание графа из ребер
+  const consumer = requestingId; // ID, запрашивающий энергию
 
-  console.log(`До: ${totalAvailableEnergy}`);
+  let remainingEnergy = requiredEnergy; // Оставшаяся требуемая энергия
 
-  // if (requiredEnergy > totalAvailableEnergy) {
-  //   alert('Not enough total energy to satisfy the request.');
-  //   return {};
-  // }
-
-  const paths: InfoDataType = [];
-  let availableGenerators = [...generators]; // Copy of the generators array
+  const copyData: InfoDataType = []; // Копия массива данных data. для дальнейшего обновления
+  let availableGenerators = [...generators]; // Копия массива генераторов
 
   const accounts = await getAccounts();
 
+  // Пока остаётся требуемая энергия и есть доступные генераторы
   while (remainingEnergy > 0 && availableGenerators.length > 0) {
+    // Поиск оптимального пути
     const result = findOptimalPathForConsumer(
       graph,
       availableGenerators,
@@ -329,34 +353,30 @@ export const connectionFunc = async (start: number, requiredEnergy: number) => {
       generatorEnergy,
     );
 
-    if (!result) {
-      console.log('No valid path found for the remaining energy.');
-      return {}; // Exit loop if no valid path is found
-    }
+    if (!result) return {}; // Выход из цикла, если не найден допустимый путь
 
-    const { generator, path, loss, availableEnergy } = result;
+    const { generator, path, loss, availableEnergy } = result; // Результат функции findOptimalPathForConsumer
+    // кол-во энергии для передачи. принимает ту, которая меньше. Оставшаяся энергия или доступная энергия у генератора
     const energyToTransfer = Math.min(remainingEnergy, availableEnergy);
 
-    console.log(
-      `Transferring ${energyToTransfer} units from generator ${generator}`,
-    );
-
+    // Обновление энергии у генератора и оставшейся энергии
     generatorEnergy[generator] -= energyToTransfer;
     totalAvailableEnergy -= energyToTransfer;
     remainingEnergy -= energyToTransfer;
 
-    paths.push({
-      consumer: start,
+    copyData.push({
+      consumer: requestingId,
       generator,
       loss,
       road: path.join(' -> '),
       requested: String(energyToTransfer),
     });
 
-    const generatorAddress = accounts[generator]; // Преобразование идентификатора генератора в адрес
-    const consumerAddress = accounts[start]; // Преобразование идентификатора потребителя в адрес
+    const generatorAddress = accounts[generator]; // Преобразование ID генератора в адрес
+    const consumerAddress = accounts[requestingId]; // Преобразование ID потребителя в адрес
 
-    if (!generators.includes(start)) {
+    // Если потребитель не является генератором, логируется передача энергии
+    if (!generators.includes(requestingId)) {
       try {
         await logEnergyTransfer(
           generatorAddress,
@@ -365,31 +385,30 @@ export const connectionFunc = async (start: number, requiredEnergy: number) => {
           loss,
         );
       } catch (error) {
-        console.error(`Ошибка при логировании энергопередачи: ${error}`);
+        console.error(`Ошибка при логировании: ${error}`);
       }
     }
 
-    // Remove generator with zero or negative energy from the available list
+    // Удаление генераторов с нулевой энергией
     availableGenerators = availableGenerators.filter(
       (gen) => generatorEnergy[gen] > 0,
     );
   }
-
-  data.push(...paths);
-
-  console.log(`После: ${totalAvailableEnergy}`);
+  // После отработки  цикла while, добавление копии данных в data. consumer; generator; loss; road; requested;
+  data.push(...copyData);
 
   return {
-    data,
-    generatorEnergy,
-    totalAvailableEnergy,
+    data, // массив данных
+    generatorEnergy, // Обновленные данные о доступной энергии у генераторов
+    totalAvailableEnergy, // Обновленное общее количество доступной энергии
   };
 };
 
+// Функция для получения транзакций для потребителя
 export const getTransfersForConsumer = async (consumerId: number) => {
-  const accounts = await getAccounts();
-  const consumerAddress = accounts[consumerId];
+  const accounts = await getAccounts(); // Получение аккаунтов
+  const consumerAddress = accounts[consumerId]; // Преобразование ID потребителя в адрес
+  const transfers = await getTransfersByAddress(consumerAddress); // Получение транзакций по адресу
 
-  const transfers = await getTransfersByAddress(consumerAddress);
   return transfers;
 };

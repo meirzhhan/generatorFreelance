@@ -1,17 +1,19 @@
+// Интерфейс Dot для описания точки на карте
 export interface Dot {
-  id: number;
-  x: number;
-  y: number;
-  consumption?: number;
-  role?: boolean;
+  id: number; // ID
+  x: number; // Координата X точки
+  y: number; // Координата Y точки
+  consumption: number; // Потребление энергии
+  role?: boolean; // Роль точки (true = генератор, false = потребитель)
 }
 
+// Интерфейс DotsProps для описания свойств компонента Dots
 interface DotsProps {
-  dot: Dot;
-  onClickDot: (id: number) => void;
+  dot: Dot; // Точка
+  onClickDot: (id: number) => void; // Функция, вызываемая при клике на точку
 }
 
-//  Координаты расположений, и роль (true = генератор)
+// ID, координаты расположений, требуемое колл-во энергии и роль (true = генератор)
 export const dots: Dot[] = [
   { id: 1, x: 823, y: 10, consumption: 55, role: true },
   { id: 2, x: 243, y: 10, consumption: 3, role: true },
@@ -72,24 +74,20 @@ export const dots: Dot[] = [
   { id: 57, x: 650, y: 700, consumption: 6.7 },
   { id: 58, x: 600, y: 1250, consumption: 6.9 },
 ];
-let x = 0;
-dots.map((d) => {
-  if (d.consumption) x = x + d.consumption;
-});
 
-console.log(`Consuming: ${x}`);
-
-//  Функция для размещения точек
+// Функция для размещения точек с учетом масштаба
 const scaleCoordinates = (
-  dots: Dot[],
-  width: number,
-  height: number,
+  dots: Dot[], // Массив точек
+  width: number, // Ширина области отображения
+  height: number, // Высота области отображения
 ): Dot[] => {
+  // Определение минимальных и максимальных координат
   const minX = Math.min(...dots.map((dot) => dot.x)) - 15;
   const maxX = Math.max(...dots.map((dot) => dot.x)) + 35;
   const minY = Math.min(...dots.map((dot) => dot.y)) - 30;
   const maxY = Math.max(...dots.map((dot) => dot.y)) + 30;
 
+  // Масштабирование координат
   return dots.map((dot) => ({
     ...dot,
     x: ((dot.x - minX) / (maxX - minX)) * width,
@@ -97,6 +95,7 @@ const scaleCoordinates = (
   }));
 };
 
+// Масштабирование координат точек до заданных размеров
 export const scaledDots = scaleCoordinates(dots, 850, 750);
 
 const Dots = (props: DotsProps) => {
@@ -113,7 +112,7 @@ const Dots = (props: DotsProps) => {
         r={10}
         fill={role === true ? 'red' : 'blue'}
         style={role ? {} : { cursor: 'pointer' }}
-        onClick={() => onClickDot(id)}
+        onClick={() => onClickDot(id)} // Обработчик клика
       />
       <text x={x + 12} y={y + 4} fontSize="15" fontWeight={700} fill="black">
         {id}

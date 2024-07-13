@@ -1,12 +1,13 @@
 interface GeneratorsInfoProps {
-  totalEnergy: number;
-  generatorsEnergy: { [key: number]: number };
+  generatorsEnergy: { [key: number]: number }; // Объект с энергией каждого генератора. Пример: 1 = 230, 2 = 300
+  totalEnergy: number; // Общее количество доступной энергии
 }
 
 const GeneratorsInfo = ({
   generatorsEnergy,
   totalEnergy,
 }: GeneratorsInfoProps) => {
+  // Преобразование объекта `generatorsEnergy` в массив [ключ, значение], [], ...
   const generators = Object.entries(generatorsEnergy);
 
   return (

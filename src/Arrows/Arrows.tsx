@@ -1,4 +1,4 @@
-import { scaledDots } from '../Dots/Dots';
+import { scaledDots } from '../Dots/Dots'; // импорт точек (готовые для отрисовки)
 
 interface ArrowsProps {
   arrow: [number, number, number];
