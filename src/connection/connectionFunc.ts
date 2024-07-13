@@ -28,14 +28,14 @@ const logEnergyTransfer = async (
   const contract = await getContract();
 
   const PRICE_PER_MWH = 23000;
-  const etherPrice = 1435457; // Example Ether price in Tenge
+  const etherPrice = 100; // Example Ether price in Tenge
 
   const lossCoefficientPercent = Math.floor(lossCoefficient * 100);
   const energyGeneratedInt = Math.floor(energyGenerated);
 
   // Пересчитаем затраты
   const energyReceived = Math.floor(energyGenerated-lossCoefficient)
-  const costInTenge = energyReceived * PRICE_PER_MWH;
+  const costInTenge = energyGenerated * PRICE_PER_MWH;
   const costInEther = (costInTenge / etherPrice).toString();
   const costInEtherWei = web3.utils.toWei(costInEther, 'ether');
 

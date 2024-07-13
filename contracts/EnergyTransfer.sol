@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 contract EnergyTransfer {
     uint256 public constant PRICE_PER_MWH = 23000; // Цена указана в центах, т.е. 10 центов = 0.10 долларов
-    uint256 public constant ETHER_PRICE_IN_TENGE = 1435457; // Цена эфира в тенге
 
     struct Transfer {
         address generator;
@@ -39,7 +38,7 @@ contract EnergyTransfer {
         require(_energyGenerated > 0, "Energy generated must be greater than zero");
         require(_lossCoefficient >= 0 && _lossCoefficient <= 100, "Loss coefficient must be between 0 and 100");
 
-        uint256 energyLoss = (_energyGenerated * _lossCoefficient) / 100;
+        uint256 energyLoss = (_lossCoefficient) / 100;
         uint256 energyReceived = _energyGenerated - energyLoss;
         uint256 cost = (energyReceived * PRICE_PER_MWH);
 
