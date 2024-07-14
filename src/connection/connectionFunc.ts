@@ -61,7 +61,7 @@ const logEnergyTransfer = async (
   const contract = await getContract(); // Получение контракта
 
   const PRICE_PER_MWH = 23000; // Цена за мегаватт-час в тенге
-  const etherPrice = 1; // Цена эфира в тенге
+  const etherPrice = 1435467; // Цена эфира в тенге
 
   const lossCoefficientPercent = Math.floor(lossCoefficient * 100); // Преобразование коэффициента потерь в проценты
   const energyGeneratedInt = Math.floor(energyGenerated); // Округление сгенерированной энергии до целого числа
@@ -89,6 +89,7 @@ const logEnergyTransfer = async (
       energyGeneratedInt,
       lossCoefficientPercent,
       costInEtherWei,
+      PRICE_PER_MWH
     )
     .send({
       from: consumer,
